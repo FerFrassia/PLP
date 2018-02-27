@@ -1,0 +1,152 @@
+<html>
+<head>
+<script type="text/javascript">
+// EJ 1
+let Tipo = {}
+let Term = {}
+let Val = Object.create(Term);
+let Bool = Object.create(Tipo);
+
+Bool.toString = function() {
+	return "Bool"
+}
+
+Val.reducir = function() {
+	return this
+}
+
+function Flecha(dom,cod) {
+	this.dominio = dom;
+	this.codominio = cod;
+	this.toString = function() {
+		return "(" +  dom + ") -> (" + cod + ")"
+	}
+	this.__proto__ = Tipo; //puede ser sujeto a cambio
+}
+
+let TT = Object.create(Val);
+let FF = Object.create(Val);
+
+function App(func,par) {
+	this.funcion = func;
+	this.parametro = par;
+	this.toString = function() {
+		return "(" + this.funcion.toString() + ") (" + this.parametro.toString() + ")"
+	};
+	this.deepCopy = function() {
+		return (new App(this.funcion.deepCopy(), this.parametro.deepCopy()))
+	}
+	this.__proto__ = Term;
+	this.sust = function(x, term) {
+		this.funcion = this.funcion.sust(x, term)
+		this.parametro = this.parametro.sust(x, term)
+	}
+	this.reducir = function() {
+		if (this.funcion.__proto__.__proto__ != Val) {
+			res = this.deepCopy()
+			res.funcion = res.funcion.reducir()
+			return res
+		} else if ( !(this.parametro.__proto__ == Val | this.parametro.__proto__.__proto__ == Val) ) {
+			res = this.deepCopy()
+			res.parametro = res.parametro.reducir()
+			return res
+		} else {
+			return this.funcion.cuerpo.sust(this.funcion.parametro, this.parametro)
+		}
+	}
+}
+
+function Abs(param, tipo_param,cuerpo) {
+	this.parametro = param;
+	this.tipo_parametro = tipo_param;
+	this.cuerpo = cuerpo;
+}
+
+Abs.prototype.deepCopy = function() {
+	return (new Abs(this.parametro.deepCopy(), this.tipo_parametro, this.cuerpo.deepCopy()));
+}
+
+Abs.prototype.sust = function(x, term) {
+		if (this.parametro != x) {
+			return this.deepCopy().cuerpo.sust(x, term)
+		}
+	}
+
+Abs.prototype.toString = function() {
+		return "\\" + this.parametro.toString() + ":" + this.tipo_parametro.toString() + "." + this.cuerpo.toString();
+	}
+
+Abs.prototype.__proto__ = Val
+
+
+function Var(val) {
+	this.valor = val;
+	this.toString = function() {
+		return this.valor
+	}
+	this.__proto__ = Val;
+	this.deepCopy = function() {
+		return (new Var(this.valor));
+	}
+	this.sust = function(x, term) {
+		res = this.deepCopy()
+		if (this.valor == x.valor) {
+			res.valor = term.toString()
+		}
+		return res
+	}
+}
+
+// EJ 2
+Bool.toString = function() {
+	return "Bool"
+};
+
+TT.toString = function() {
+	return "true"
+};
+
+FF.toString = function() {
+	return "false"
+};
+
+// EJ 3
+TT.deepCopy = function() {
+	return this
+};
+
+FF.deepCopy = function() {
+	return this
+};
+
+Tipo.deepCopy = function() {
+	return this
+};
+
+// EJ 4
+TT.sust = function(x, term) {
+	return this
+}
+
+FF.sust = function(x, term) {
+	return this
+}
+
+// EJ 5
+Term.evaluar = function() {
+	if (this.__proto__ == Abs.prototype || this.__proto__ == Val) {
+		return this
+	} else {
+		return this.reducir().evaluar()
+	}
+}
+
+
+
+
+
+
+</script>
+</head>
+
+</html>
